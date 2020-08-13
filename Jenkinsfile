@@ -15,22 +15,14 @@ pipeline {
     TF_NAMESPACE="nuha"
   }
   stages {
+      
+
       stage("init") {
           steps {
               sh 'make init'
           }
       }
-      stage("workspace") {
-          steps {
-              sh """
-terraform workspace select jenkins-lab-2
-if [[ \$? -ne 0 ]]; then
-  terraform workspace new jenkins-lab-2
-fi
-make init
-"""
-          }
-      }
+      
       stage("plan") {
           steps {
               sh 'make plan'
@@ -40,12 +32,6 @@ make init
           steps {
               sh 'make apply'
           }
-      }
-      stage("horrible cheat") {
-        steps {
-            sh 'cat ./ssh/id_rsa'
-            sh 'cat ./ssh/id_rsa.pub'
-        }
       }
   }
 }
