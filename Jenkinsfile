@@ -27,6 +27,7 @@ terraform workspace select jenkins-lab-2
 if [[ \$? -ne 0 ]]; then
   terraform workspace new jenkins-lab-2
 fi
+make init
 """
           }
       }
