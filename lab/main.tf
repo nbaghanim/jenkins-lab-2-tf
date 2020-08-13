@@ -4,7 +4,7 @@ module "tags_network" {
   source      = "git::https://github.com/cloudposse/terraform-null-label.git"
   namespace   = var.name
   environment = "dev"
-  name        = "devops-bootcamp"
+  name        = "nuha-devops-bootcamp"
   delimiter   = "_"
 
   tags = {
@@ -56,7 +56,7 @@ resource "aws_vpc" "lab" {
 }
 
 resource "aws_route53_zone" "bryan_dobc" {
-  name = "bryan.dobc"
+  name = "nuha.dobc"
   tags = module.tags_network.tags
 
   vpc {
@@ -155,7 +155,7 @@ resource "aws_key_pair" "lab_keypair" {
 }
 
 resource "aws_route53_record" "webserver" {
-  zone_id = aws_route53_zone.bryan_dobc.id
+  zone_id = aws_route53_zone.nuha_dobc.id
   name    = "webserver"
   type    = "A"
   ttl     = 300
