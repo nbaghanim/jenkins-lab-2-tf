@@ -183,6 +183,12 @@ resource "aws_instance" "api" {
   key_name                    = aws_key_pair.lab_keypair.id
   associate_public_ip_address = true
   tags                        = module.tags_webserver.tags
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo \"${aws_instance.api.public_ip}\" > /home/ubuntu/api/index.html"
+    ]
+  }
 }
 
 resource "aws_instance" "bastion" {
