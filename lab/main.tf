@@ -4,7 +4,7 @@ module "tags_network" {
   source      = "git::https://github.com/cloudposse/terraform-null-label.git"
   namespace   = var.name
   environment = "dev"
-  name        = "nuha-devops-bootcamp"
+  name        = "devops-bootcamp"
   delimiter   = "_"
 
   tags = {
@@ -39,6 +39,23 @@ module "tags_webserver" {
   }
 }
 
+module "tags_api" {
+  source      = "git::https://github.com/cloudposse/terraform-null-label.git"
+  namespace   = var.name
+  environment = "dev"
+  name        = "api-devops-bootcamp"
+  delimiter   = "_"
+
+  tags = {
+    owner = var.name
+    type  = "api"
+  }
+}
+
+
+
+
+
 data "aws_ami" "latest_webserver" {
   most_recent = true
   owners      = ["772816346052"]
@@ -55,14 +72,7 @@ resource "aws_vpc" "lab" {
   enable_dns_hostnames = true
 }
 
-resource "aws_route53_zone" "bryan_dobc" {
-  name = "nuha.dobc"
-  tags = module.tags_network.tags
 
-  vpc {
-    vpc_id = aws_vpc.lab.id
-  }
-}
 
 resource "aws_internet_gateway" "lab_gateway" {
   vpc_id = aws_vpc.lab.id
@@ -154,12 +164,16 @@ resource "aws_key_pair" "lab_keypair" {
   public_key = random_id.keypair.keepers.public_key
 }
 
-resource "aws_route53_record" "webserver" {
-  zone_id = aws_route53_zone.nuha_dobc.id
-  name    = "webserver"
-  type    = "A"
-  ttl     = 300
-  records = [aws_instance.webserver.0.private_ip]
+
+resource "aws_instance" "api" {
+  count                       = 1
+  ami                         = data.aws_ami.latest_webserver.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.webserver[count.index].id
+  vpc_security_group_ids      = [aws_security_group.webserver.id]
+  key_name                    = aws_key_pair.lab_keypair.id
+  associate_public_ip_address = true
+  tags                        = module.tags_api.tags
 }
 
 resource "aws_instance" "webserver" {
@@ -171,36 +185,11 @@ resource "aws_instance" "webserver" {
   key_name                    = aws_key_pair.lab_keypair.id
   associate_public_ip_address = true
   tags                        = module.tags_webserver.tags
-  depends_on                  = [aws_instance.api]
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo \"${aws_instance.api.0.public_ip}\" > /home/ubuntu/api/index.html"
-    ]
-
-    connection {
-      type                = "ssh"
-      user                = "ubuntu"
-      host                = self.private_ip
-      private_key         = file("./ssh/id_rsa")
-      bastion_host        = aws_instance.bastion.public_ip
-      bastion_private_key = file("./ssh/id_rsa")
-      bastion_user        = "ubuntu"
-    }
-  }
+  depends_on 		      = [aws_instance.api]
+  provisioner "local-exec" {
+    command = "echo ${aws_instance.api.0.public_ip} > index.html"
 }
-
-resource "aws_instance" "api" {
-  count                       = 1
-  ami                         = data.aws_ami.latest_webserver.id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.webserver[count.index].id
-  vpc_security_group_ids      = [aws_security_group.webserver.id]
-  key_name                    = aws_key_pair.lab_keypair.id
-  associate_public_ip_address = true
-  tags                        = module.tags_webserver.tags
 }
-
 resource "aws_instance" "bastion" {
   ami                    = "ami-02c7c728a7874ae7a"
   instance_type          = "t3.micro"
