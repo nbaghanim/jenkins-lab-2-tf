@@ -186,7 +186,7 @@ resource "aws_instance" "api" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo \"${aws_instance.api.public_ip}\" > /home/ubuntu/api/index.html"
+      "echo \"${aws_instance.api.0.public_ip}\" > /home/ubuntu/api/index.html"
     ]
   }
 }
